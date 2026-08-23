@@ -1,0 +1,6 @@
+{
+  "name": "Google Sheets Bengali CMS & AI Agent",
+  "description": "বাংলা ভাষায় সম্পূর্ণ গুগল শিট চালিত সিএমএস ওয়েবসাইট, ১৬:৯ ইমেজ স্লাইডার, এডমিন ড্যাশবোর্ড, গাইড ও কোড কপি অপশন এবং গুগল শিট ভিত্তিক এআই চ্যাটবট এজেন্ট।",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

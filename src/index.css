@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Noto Serif Bengali', 'Noto Sans Bengali', serif, sans-serif;
+    background-color: #ffffff;
+    color: #1e293b;
+  }
+}
+
+.font-serif-bengali {
+  font-family: 'Noto Serif Bengali', serif;
+}
+
+.font-sans-bengali {
+  font-family: 'Noto Sans Bengali', sans-serif;
+}
+
+/* Custom smooth scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Google Color Cycle / Rotating Ring Animation */
+@keyframes google-color-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-google-color-spin {
+  animation: google-color-spin 3.5s linear infinite;
+}
+
