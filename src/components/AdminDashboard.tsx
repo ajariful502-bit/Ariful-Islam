@@ -1888,10 +1888,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
                   <div className="flex items-center gap-2">
                     <span className="w-7 h-7 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs">১</span>
-                    <h3 className="font-bold text-white text-sm sm:text-base">নতুন গুগল স্প্রেডশিট খুলুন ও স্ক্রিপ্ট এডিটর ওপেন করুন</h3>
+                    <h3 className="font-bold text-white text-sm sm:text-base">আপনার গুগল স্প্রেডশিট ওপেন করুন ও স্ক্রিপ্ট এডিটর খুলুন</h3>
                   </div>
                   <p className="text-xs sm:text-sm text-slate-400 pl-9 leading-relaxed">
-                    প্রথমে <a href="https://sheets.new" target="_blank" rel="noreferrer" className="text-blue-400 font-bold underline">sheets.new</a> এ যান এবং একটি নতুন গুগল শিট তৈরি করুন। এরপর মেনুবার থেকে <strong>Extensions &gt; Apps Script</strong> এ ক্লিক করুন।
+                    আপনার তৈরি স্প্রেডশিট লিঙ্ক: <a href="https://docs.google.com/spreadsheets/d/1lBQGVctd6OK0-YInzM8FfKUoUqzRkB_7IgEY5_fRAgI/edit" target="_blank" rel="noreferrer" className="text-blue-400 font-bold underline break-all">Google Spreadsheet খুলুন</a>। এরপর মেনুবার থেকে <strong>Extensions &gt; Apps Script</strong> এ ক্লিক করুন।
                   </p>
                 </div>
 
@@ -1899,10 +1899,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
                   <div className="flex items-center gap-2">
                     <span className="w-7 h-7 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs">২</span>
-                    <h3 className="font-bold text-white text-sm sm:text-base">Code.gs কোড পেস্ট করুন এবং ইনিশিয়াল সেটআপ চালান</h3>
+                    <h3 className="font-bold text-white text-sm sm:text-base">Code.gs কোড পেস্ট করুন এবং setupSheets ফাংশন রান করুন</h3>
                   </div>
                   <p className="text-xs sm:text-sm text-slate-400 pl-9 leading-relaxed">
-                    Apps Script উইন্ডোতে থাকা পূর্বের সব কোড মুছে দিন। এরপর পাশের <strong>Code.gs কোড</strong> ট্যাব থেকে <strong>"কোড কপি করুন"</strong> বাটনে ক্লিক করে পুরো কোডটি পেস্ট করুন। ফাইলটি Save (Ctrl+S) করুন। ড্রপডাউন থেকে <code>setupInitialSheets</code> সিলেক্ট করে <strong>Run</strong> এ ক্লিক করুন।
+                    Apps Script এডিটর উইন্ডোতে থাকা পূর্বের সব কোড মুছে দিন। এরপর পাশের <strong>Code.gs কোড</strong> ট্যাব থেকে <strong>"কোড কপি করুন"</strong> বাটনে ক্লিক করে পুরো কোডটি পেস্ট করুন। ফাইলটি Save (Ctrl+S) করুন। ড্রপডাউন থেকে <code>setupSheets</code> সিলেক্ট করে <strong>Run</strong> এ ক্লিক করুন (অনুমতি চাইলে এক্সেস Allow দিন)। এতে স্বয়ংক্রিয়ভাবে সকল শিট ও কলাম তৈরি হয়ে যাবে।
                   </p>
                 </div>
 

@@ -12,11 +12,25 @@ const PORT = 3000;
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
+// Helper to validate whether a string looks like a valid Gemini API key
+function isLikelyValidGeminiKey(key?: string): boolean {
+  if (!key || typeof key !== "string") return false;
+  const trimmed = key.trim();
+  // Google AI Studio Gemini API keys begin with 'AIzaSy' and are 39 characters
+  if (!trimmed.startsWith("AIzaSy")) return false;
+  if (trimmed.length < 35 || trimmed.length > 50) return false;
+  return true;
+}
+
 // Lazy initialization of Gemini client
 let geminiClient: GoogleGenAI | null = null;
 function getGeminiClient(): GoogleGenAI | null {
-  if (!geminiClient && process.env.GEMINI_API_KEY) {
-    geminiClient = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  if (!geminiClient && isLikelyValidGeminiKey(process.env.GEMINI_API_KEY)) {
+    try {
+      geminiClient = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+    } catch (e) {
+      geminiClient = null;
+    }
   }
   return geminiClient;
 }
@@ -44,9 +58,19 @@ async function generateWithFallback(client: GoogleGenAI, contents: any) {
     } catch (err: any) {
       lastError = err;
       const status = err?.status || err?.code || (err?.message?.includes("503") ? 503 : 0);
+      const isInvalidKey = 
+        status === 400 || 
+        err?.message?.includes("API key not valid") || 
+        err?.message?.includes("API_KEY_INVALID");
+
+      if (isInvalidKey) {
+        // Stop retrying other candidate models if the API key itself is invalid
+        throw err;
+      }
+
       console.warn(`Model ${model} request error (${status}): ${err?.message || err}. Trying next fallback candidate...`);
-      // If error is 503 (high demand) or 429, continue to next model in loop
-      await new Promise(resolve => setTimeout(resolve, 300));
+      // If error is 503 (high demand) or 429, wait briefly and continue to next model in loop
+      await new Promise(resolve => setTimeout(resolve, 250));
     }
   }
 
@@ -57,18 +81,18 @@ async function generateWithFallback(client: GoogleGenAI, contents: any) {
 app.post("/api/test-gemini", async (req, res) => {
   try {
     const { apiKey } = req.body;
-    const keyToUse = (apiKey && typeof apiKey === 'string' && apiKey.trim()) 
+    const rawKey = (apiKey && typeof apiKey === 'string' && apiKey.trim()) 
       ? apiKey.trim() 
       : process.env.GEMINI_API_KEY;
 
-    if (!keyToUse) {
+    if (!isLikelyValidGeminiKey(rawKey)) {
       return res.status(400).json({ 
         success: false, 
-        error: "কোনো Gemini API Key পাওয়া যায়নি। এডমিন প্যানেল থেকে আপনার এপিআই কি দিন।" 
+        error: "কোনো বৈধ Gemini API Key পাওয়া যায়নি। এডমিন প্যানেল থেকে আপনার সঠিক এপিআই কি (যেমন: AIzaSy...) প্রদান করুন।" 
       });
     }
 
-    const testClient = new GoogleGenAI({ apiKey: keyToUse });
+    const testClient = new GoogleGenAI({ apiKey: rawKey! });
     const reply = await generateWithFallback(
       testClient,
       "অনুগ্রহ করে নিশ্চিত করুন যে Gemini API সফলভাবে কাজ করছে। সংক্ষেপে বাংলায় এক লাইনে উত্তর দিন।"
@@ -76,10 +100,10 @@ app.post("/api/test-gemini", async (req, res) => {
 
     return res.json({ success: true, message: reply || "Gemini API সফলভাবে সংযুক্ত হয়েছে!" });
   } catch (err: any) {
-    console.error("Gemini test failed:", err);
+    const errorMsg = err?.message || "জেমিনি এপিআই সংযোগ স্থাপন করা যায়নি। অনুগ্রহ করে এপিআই কি সঠিক কিনা যাচাই করুন।";
     return res.status(400).json({ 
       success: false, 
-      error: err.message || "জেমিনি এপিআই সংযোগ স্থাপন করা যায়নি। অনুগ্রহ করে এপিআই কি সঠিক কিনা যাচাই করুন।" 
+      error: errorMsg
     });
   }
 });
@@ -150,19 +174,17 @@ ${gallery.map((g: any) => `- ছবি: ${g.image_title || g["image title"]}, �
 ${knowledgeBase}`;
 
     // Prioritize user-provided custom API key, then environment variable
-    const keyToUse = (geminiApiKey && typeof geminiApiKey === 'string' && geminiApiKey.trim())
+    const rawKey = (geminiApiKey && typeof geminiApiKey === 'string' && geminiApiKey.trim())
       ? geminiApiKey.trim()
       : process.env.GEMINI_API_KEY;
 
     let client: GoogleGenAI | null = null;
-    if (keyToUse) {
+    if (isLikelyValidGeminiKey(rawKey)) {
       try {
-        client = new GoogleGenAI({ apiKey: keyToUse });
+        client = new GoogleGenAI({ apiKey: rawKey! });
       } catch (clientInitErr) {
-        console.warn("Gemini client initialization failed, falling back to sheet data:", clientInitErr);
+        client = null;
       }
-    } else {
-      client = getGeminiClient();
     }
 
     if (client) {
@@ -197,7 +219,7 @@ ${knowledgeBase}`;
           return res.json({ reply: replyText, source: "gemini" });
         }
       } catch (geminiErr: any) {
-        console.warn("Gemini API call failed or quota exceeded, seamlessly using sheet & Islamic knowledge base:", geminiErr?.message || geminiErr);
+        // Silently fall back to sheet-grounded Islamic response engine
       }
     }
 
