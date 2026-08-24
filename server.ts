@@ -315,6 +315,126 @@ function generateSheetSemanticReply(message: string, sheetData: any): string {
   return `আসসালামু আলাইকুম ওয়া রাহমাতুল্লাহ! আমি "${siteTitle}"-এর এআই সহকারী।\n\nগুগল স্প্রেডশিটের তথ্যের ভিত্তিতে আমি আপনাকে সহায়তা করতে পারি:\n১. পণ্য ও সেবাসমূহ এবং বিবরণ\n২. নির্ধারিত মূল্য তালিকা ও প্যাকেজ\n৩. যোগাযোগের ঠিকানা ও ফোন নম্বর\n৪. আমাদের ব্লগ, ভিডিও ও গ্যালারি\n৫. ব্যবসায়িক সততা ও ইসলামিক মূলনীতি\n\nইনশাআল্লাহ আপনার নির্দিষ্ট প্রশ্নটি বাংলায় লিখুন, আমি তথ্য জানিয়ে দিচ্ছি।`;
 }
 
+// ==========================================
+// GOOGLE CHAT API ENDPOINTS
+// ==========================================
+
+// 1. List spaces
+app.get("/api/chat/spaces", async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ error: "Google OAuth টোকেন আবশ্যক" });
+    }
+
+    const response = await fetch("https://chat.googleapis.com/v1/spaces", {
+      headers: { Authorization: authHeader }
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      return res.status(response.status).json(data);
+    }
+    return res.json(data);
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message || "Google Chat Spaces আনতে ব্যর্থ হয়েছে" });
+  }
+});
+
+// 2. Create space (Direct Message or Space)
+app.post("/api/chat/spaces", async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ error: "Google OAuth টোকেন আবশ্যক" });
+    }
+
+    const { displayName, spaceType } = req.body;
+    const body: any = {
+      spaceType: spaceType || "SPACE",
+      displayName: displayName || "সাপোর্ট চ্যাট"
+    };
+
+    const response = await fetch("https://chat.googleapis.com/v1/spaces", {
+      method: "POST",
+      headers: {
+        Authorization: authHeader,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(body)
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      return res.status(response.status).json(data);
+    }
+    return res.json(data);
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message || "Google Chat স্পেস তৈরিতে ব্যর্থ হয়েছে" });
+  }
+});
+
+// 3. List messages in a space
+app.get("/api/chat/spaces/:spaceId/messages", async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ error: "Google OAuth টোকেন আবশ্যক" });
+    }
+
+    const { spaceId } = req.params;
+    const spaceName = spaceId.startsWith("spaces/") ? spaceId : `spaces/${spaceId}`;
+    const pageSize = req.query.pageSize || "30";
+
+    const response = await fetch(`https://chat.googleapis.com/v1/${spaceName}/messages?pageSize=${pageSize}`, {
+      headers: { Authorization: authHeader }
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      return res.status(response.status).json(data);
+    }
+    return res.json(data);
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message || "মেসেজ আনতে ব্যর্থ হয়েছে" });
+  }
+});
+
+// 4. Send message to a space
+app.post("/api/chat/spaces/:spaceId/messages", async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ error: "Google OAuth টোকেন আবশ্যক" });
+    }
+
+    const { spaceId } = req.params;
+    const spaceName = spaceId.startsWith("spaces/") ? spaceId : `spaces/${spaceId}`;
+    const { text } = req.body;
+
+    if (!text || typeof text !== "string") {
+      return res.status(400).json({ error: "টেক্সট মেসেজ আবশ্যক" });
+    }
+
+    const response = await fetch(`https://chat.googleapis.com/v1/${spaceName}/messages`, {
+      method: "POST",
+      headers: {
+        Authorization: authHeader,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ text })
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      return res.status(response.status).json(data);
+    }
+    return res.json(data);
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message || "মেসেজ পাঠাতে ব্যর্থ হয়েছে" });
+  }
+});
+
 async function startServer() {
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {

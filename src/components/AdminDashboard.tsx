@@ -11,6 +11,7 @@ import { GoogleSheetDatabase, SheetSettings, SliderItem, ProductItem, GalleryIte
 import { CODE_GS_SCRIPT } from '../data/codeGsTemplate';
 import { GoogleProfileAvatar } from './GoogleProfileAvatar';
 import { formatImageUrl, formatYoutubeEmbedUrl } from '../utils/mediaUtils';
+import { GoogleChatTab } from './GoogleChatTab';
 
 interface AdminDashboardProps {
   isOpen: boolean;
@@ -39,6 +40,7 @@ export type AdminTab =
   | 'articles'
   | 'messages'
   | 'gemini'
+  | 'googlechat'
   | 'security'
   | 'api'
   | 'codegs'
@@ -309,6 +311,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     { id: 'articles', label: 'ব্লগ ও ভিডিও আপডেট', icon: FileText, color: 'text-amber-400', badge: formData["Article and update"].length },
     { id: 'messages', label: 'গ্রাহক বার্তা ইনবক্স', icon: MessageSquare, color: 'text-rose-400', badge: formData["send Message"].length },
     { id: 'gemini', label: 'জেমিনি এআই কনফিগারেশন', icon: Bot, color: 'text-purple-300', badge: 'AI' },
+    { id: 'googlechat', label: 'গুগল চ্যাট ইনবক্স (লাইভ)', icon: MessageSquare, color: 'text-emerald-400', badge: 'Live' },
     { id: 'security', label: 'পাসওয়ার্ড ও নিরাপত্তা', icon: Lock, color: 'text-emerald-300', badge: null },
     { id: 'api', label: 'এপিআই সংযোগ ও সিঙ্ক', icon: ExternalLink, color: 'text-sky-400', badge: null },
     { id: 'codegs', label: 'অ্যাপস স্ক্রিপ্ট কোড', icon: Code, color: 'text-indigo-300', badge: null },
@@ -1669,6 +1672,29 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     <li><strong>"Create API key"</strong> বাটনে ক্লিক করে একটি নতুন API Key তৈরি করুন।</li>
                     <li>তৈরিকৃত কী-টি কপি করে উপরের বক্সে পেস্ট করে <strong>"এপিআই কি সেভ করুন"</strong> বাটনে ক্লিক করুন।</li>
                   </ol>
+                </div>
+              </div>
+            )}
+
+            {/* TAB: GOOGLE CHAT INBOX (এডমিন ও ইউজার গুগল চ্যাট) */}
+            {activeTab === 'googlechat' && (
+              <div className="space-y-6 animate-in fade-in duration-150">
+                <div className="pb-4 border-b border-slate-800">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-950 text-emerald-300 border border-emerald-800 mb-2">
+                    <MessageSquare className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Google Chat API লাইভ মেসেজিং</span>
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-bold text-white">গুগল চ্যাট ইনবক্স ও যোগাযোগ</h2>
+                  <p className="text-xs sm:text-sm text-slate-400">
+                    ব্যবহারকারী ও কাস্টমারদের সাথে গুগল চ্যাটের মাধ্যমে সরাসরি এসএমএস ও চ্যাট রুম ম্যানেজ করুন।
+                  </p>
+                </div>
+
+                <div className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden shadow-xl h-[580px] flex flex-col">
+                  <GoogleChatTab
+                    primaryColor="#2563eb"
+                    adminEmail={formData.Settings.contact_email || 'arifulislam.qinfo@gmail.com'}
+                  />
                 </div>
               </div>
             )}

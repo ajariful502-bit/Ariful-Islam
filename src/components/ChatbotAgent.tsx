@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Bot, X, Send, Sparkles, User } from 'lucide-react';
+import { Bot, X, Send, Sparkles, User, MessageSquare } from 'lucide-react';
 import { GoogleSheetDatabase, ChatMessage } from '../types';
 import { formatImageUrl } from '../utils/mediaUtils';
 import { getSheetFallbackAnswer } from '../utils/sheetChatFallback';
+import { GoogleChatTab } from './GoogleChatTab';
 
 interface ChatbotAgentProps {
   sheetData: GoogleSheetDatabase;
@@ -16,6 +17,7 @@ export const ChatbotAgent: React.FC<ChatbotAgentProps> = ({
   geminiApiKey = ''
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'ai' | 'admin_chat'>('ai');
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -34,10 +36,10 @@ export const ChatbotAgent: React.FC<ChatbotAgentProps> = ({
   };
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && activeTab === 'ai') {
       scrollToBottom();
     }
-  }, [messages, isOpen, isLoading]);
+  }, [messages, isOpen, isLoading, activeTab]);
 
   const suggestedQuestions = [
     'পণ্য ও সেবাসমূহ কী কী আছে?',
@@ -122,29 +124,29 @@ export const ChatbotAgent: React.FC<ChatbotAgentProps> = ({
         <div className="mb-3 w-[92vw] sm:w-[380px] md:w-[420px] h-[520px] max-h-[82vh] bg-white rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden animate-in slide-in-from-bottom-5 duration-300">
           
           {/* Chat Header */}
-          <div className="p-4 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800 shrink-0">
-            <div className="flex items-center gap-3">
+          <div className="p-3.5 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800 shrink-0">
+            <div className="flex items-center gap-2.5">
               <div className="relative">
                 {customBotIcon ? (
                   <img
                     src={customBotIcon}
                     alt="AI Bot"
-                    className="w-10 h-10 rounded-2xl object-cover border border-slate-700 shadow-md"
+                    className="w-9 h-9 rounded-2xl object-cover border border-slate-700 shadow-md"
                   />
                 ) : (
-                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-md">
+                  <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-md">
                     <Bot className="w-5 h-5 text-white" />
                   </div>
                 )}
-                <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-slate-900 animate-pulse" />
+                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-slate-900 animate-pulse" />
               </div>
               <div>
-                <h3 className="font-bold text-sm leading-tight flex items-center gap-1.5">
-                  <span>স্মার্ট এআই সহকারী</span>
+                <h3 className="font-bold text-xs sm:text-sm leading-tight flex items-center gap-1.5">
+                  <span>{sheetData.Settings.site_title || 'প্রবর্তন'} চ্যাট হাব</span>
                   <Sparkles className="w-3.5 h-3.5 text-blue-400" />
                 </h3>
-                <p className="text-[11px] text-slate-400">
-                  গুগল শিট ও জেমিনি এআই লাইভ
+                <p className="text-[10px] text-slate-400">
+                  {activeTab === 'ai' ? 'স্মার্ট এআই ও গুগল শিট সহকারী' : 'এডমিনের সাথে গুগল চ্যাট (রিয়েলটাইম)'}
                 </p>
               </div>
             </div>
@@ -158,97 +160,142 @@ export const ChatbotAgent: React.FC<ChatbotAgentProps> = ({
             </button>
           </div>
 
-          {/* Chat Messages Body */}
-          <div className="flex-1 p-4 overflow-y-auto space-y-3.5 bg-slate-50/70">
-            {messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`flex gap-2.5 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                {msg.sender === 'bot' && (
-                  <div className="w-7 h-7 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 mt-1 shadow-xs overflow-hidden">
-                    {customBotIcon ? (
-                      <img src={customBotIcon} alt="Bot" className="w-full h-full object-cover" />
-                    ) : (
-                      <Bot className="w-4 h-4" />
+          {/* Tab Switcher: AI Assistant vs Google Chat with Admin */}
+          <div className="flex items-center bg-slate-950 px-2 pt-1 border-b border-slate-800 shrink-0">
+            <button
+              type="button"
+              onClick={() => setActiveTab('ai')}
+              className={`flex-1 py-2 px-3 text-xs font-semibold rounded-t-xl transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                activeTab === 'ai'
+                  ? 'bg-slate-50/70 text-slate-900 shadow-xs'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
+              }`}
+            >
+              <Bot className="w-3.5 h-3.5 text-blue-600" />
+              <span>এআই সহকারী</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('admin_chat')}
+              className={`flex-1 py-2 px-3 text-xs font-semibold rounded-t-xl transition flex items-center justify-center gap-1.5 cursor-pointer relative ${
+                activeTab === 'admin_chat'
+                  ? 'bg-slate-50/70 text-slate-900 shadow-xs'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
+              }`}
+            >
+              <MessageSquare className="w-3.5 h-3.5 text-emerald-500" />
+              <span>এডমিন গুগল চ্যাট</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            </button>
+          </div>
+
+          {/* TAB 1: AI Assistant */}
+          {activeTab === 'ai' && (
+            <>
+              {/* Chat Messages Body */}
+              <div className="flex-1 p-4 overflow-y-auto space-y-3.5 bg-slate-50/70">
+                {messages.map((msg) => (
+                  <div
+                    key={msg.id}
+                    className={`flex gap-2.5 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    {msg.sender === 'bot' && (
+                      <div className="w-7 h-7 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 mt-1 shadow-xs overflow-hidden">
+                        {customBotIcon ? (
+                          <img src={customBotIcon} alt="Bot" className="w-full h-full object-cover" />
+                        ) : (
+                          <Bot className="w-4 h-4" />
+                        )}
+                      </div>
+                    )}
+
+                    <div
+                      className={`max-w-[82%] rounded-2xl px-4 py-2.5 text-xs sm:text-sm leading-relaxed shadow-xs ${
+                        msg.sender === 'user'
+                          ? 'bg-blue-600 text-white rounded-br-xs font-medium'
+                          : 'bg-white text-slate-800 border border-slate-200 rounded-bl-xs'
+                      }`}
+                    >
+                      <p className="whitespace-pre-line">{msg.text}</p>
+                      <span
+                        className={`block text-[10px] mt-1 ${
+                          msg.sender === 'user' ? 'text-blue-200 text-right' : 'text-slate-400'
+                        }`}
+                      >
+                        {msg.timestamp}
+                      </span>
+                    </div>
+
+                    {msg.sender === 'user' && (
+                      <div className="w-7 h-7 rounded-xl bg-slate-200 text-slate-700 flex items-center justify-center shrink-0 mt-1">
+                        <User className="w-4 h-4" />
+                      </div>
                     )}
                   </div>
-                )}
+                ))}
 
-                <div
-                  className={`max-w-[82%] rounded-2xl px-4 py-2.5 text-xs sm:text-sm leading-relaxed shadow-xs ${
-                    msg.sender === 'user'
-                      ? 'bg-blue-600 text-white rounded-br-xs font-medium'
-                      : 'bg-white text-slate-800 border border-slate-200 rounded-bl-xs'
-                  }`}
-                >
-                  <p className="whitespace-pre-line">{msg.text}</p>
-                  <span
-                    className={`block text-[10px] mt-1 ${
-                      msg.sender === 'user' ? 'text-blue-200 text-right' : 'text-slate-400'
-                    }`}
-                  >
-                    {msg.timestamp}
-                  </span>
-                </div>
-
-                {msg.sender === 'user' && (
-                  <div className="w-7 h-7 rounded-xl bg-slate-200 text-slate-700 flex items-center justify-center shrink-0 mt-1">
-                    <User className="w-4 h-4" />
+                {/* Loading / Typing Indicator */}
+                {isLoading && (
+                  <div className="flex items-center gap-2 text-xs text-slate-600 bg-white p-3 rounded-2xl border border-slate-200 w-fit shadow-xs animate-pulse">
+                    <Bot className="w-4 h-4 text-blue-600 animate-spin" />
+                    <span>জেমিনি এআই তথ্য প্রস্তুত করছে...</span>
                   </div>
                 )}
+
+                <div ref={messagesEndRef} />
               </div>
-            ))}
 
-            {/* Loading / Typing Indicator */}
-            {isLoading && (
-              <div className="flex items-center gap-2 text-xs text-slate-600 bg-white p-3 rounded-2xl border border-slate-200 w-fit shadow-xs animate-pulse">
-                <Bot className="w-4 h-4 text-blue-600 animate-spin" />
-                <span>জেমিনি এআই তথ্য প্রস্তুত করছে...</span>
+              {/* Quick Suggested Questions */}
+              <div className="px-3 py-2 bg-white border-t border-slate-100 flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
+                {suggestedQuestions.map((q, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => handleSendMessage(q)}
+                    className="shrink-0 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200/80 transition cursor-pointer"
+                  >
+                    {q}
+                  </button>
+                ))}
               </div>
-            )}
 
-            <div ref={messagesEndRef} />
-          </div>
-
-          {/* Quick Suggested Questions */}
-          <div className="px-3 py-2 bg-white border-t border-slate-100 flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
-            {suggestedQuestions.map((q, idx) => (
-              <button
-                key={idx}
-                onClick={() => handleSendMessage(q)}
-                className="shrink-0 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200/80 transition cursor-pointer"
+              {/* Message Input Box */}
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSendMessage();
+                }}
+                className="p-3 bg-white border-t border-slate-200 flex items-center gap-2 shrink-0"
               >
-                {q}
-              </button>
-            ))}
-          </div>
+                <input
+                  type="text"
+                  value={inputMessage}
+                  onChange={(e) => setInputMessage(e.target.value)}
+                  placeholder="ওয়েবসাইট বা দ্বীনি বিষয়ে যেকোনো প্রশ্ন বাংলায় করুন..."
+                  className="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                />
+                <button
+                  type="submit"
+                  disabled={isLoading || !inputMessage.trim()}
+                  style={{ backgroundColor: primaryColor }}
+                  className="p-2.5 rounded-xl text-white shadow-md hover:opacity-90 transition disabled:opacity-40 cursor-pointer"
+                  aria-label="পাঠান"
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              </form>
+            </>
+          )}
 
-          {/* Message Input Box */}
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSendMessage();
-            }}
-            className="p-3 bg-white border-t border-slate-200 flex items-center gap-2 shrink-0"
-          >
-            <input
-              type="text"
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              placeholder="ওয়েবসাইট বা দ্বীনি বিষয়ে যেকোনো প্রশ্ন বাংলায় করুন..."
-              className="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-            />
-            <button
-              type="submit"
-              disabled={isLoading || !inputMessage.trim()}
-              style={{ backgroundColor: primaryColor }}
-              className="p-2.5 rounded-xl text-white shadow-md hover:opacity-90 transition disabled:opacity-40 cursor-pointer"
-              aria-label="পাঠান"
-            >
-              <Send className="w-4 h-4" />
-            </button>
-          </form>
+          {/* TAB 2: Direct Google Chat with Admin */}
+          {activeTab === 'admin_chat' && (
+            <div className="flex-1 flex flex-col min-h-0">
+              <GoogleChatTab 
+                primaryColor={primaryColor} 
+                adminEmail={sheetData.Settings.contact_email || 'arifulislam.qinfo@gmail.com'} 
+              />
+            </div>
+          )}
 
         </div>
       )}
