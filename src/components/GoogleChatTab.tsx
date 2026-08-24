@@ -117,7 +117,15 @@ export const GoogleChatTab: React.FC<GoogleChatTabProps> = ({
         setToken(res.accessToken);
       }
     } catch (err: any) {
-      console.error('Login error:', err);
+      const errorCode = err?.code || '';
+      if (
+        errorCode === 'auth/popup-closed-by-user' || 
+        errorCode === 'auth/cancelled-popup-request' ||
+        err?.message?.includes('popup-closed-by-user')
+      ) {
+        // User closed the popup intentionally, no error to display
+        return;
+      }
       setAuthError(err?.message || 'গুগল সাইন ইন সম্পন্ন করা সম্ভব হয়নি।');
     } finally {
       setIsLoggingIn(false);
